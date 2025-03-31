@@ -8,6 +8,8 @@ public class MovableTile extends Tile
         this.piece = piece;
         canMoveHere = false;
         isMovable = true;
+
+        piece.addTile(this);
     }
 
     public Piece getPiece()

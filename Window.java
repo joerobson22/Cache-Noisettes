@@ -101,7 +101,7 @@ public class Window extends JFrame implements ActionListener, KeyListener
                 b.addActionListener(this);
                 b.setBackground(BROWN);
                 b.setBorder(BorderFactory.createLineBorder(DARKBROWN));
-                gridButtons[j][i] = b;
+                gridButtons[i][j] = b;
                 gridPanel.add(b);
             }
         }
@@ -239,7 +239,7 @@ public class Window extends JFrame implements ActionListener, KeyListener
                 {
                     if(gridButtons[i][j] == e.getSource())
                     {
-                        System.out.println("Grid button (" + Integer.toString(i) + "," + Integer.toString(j) + ") pressed");
+                        System.out.println("Grid button (" + Integer.toString(j) + "," + Integer.toString(i) + ") pressed");
                         Tile t = tileGrid[i][j];
                         if(t.isMovable())
                         {

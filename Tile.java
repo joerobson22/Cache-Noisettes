@@ -1,6 +1,6 @@
 public class Tile
 {
-    private Picture picture;
+    protected Picture picture;
     protected boolean canMoveHere;
     protected boolean isMovable;
     protected int maxNuts;
