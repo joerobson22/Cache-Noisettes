@@ -29,23 +29,23 @@ public class FileReader
         //look at all central squares (1,1), (5,1), (9,1)... (each square is 4 pixels apart)
         for(int i = 0; i < 4; i++)
         {
-            int y = (i * 4) + 1;
+            int x = (i * 4) + 1; //I IS X
             for(int j = 0; j < 4; j++)
             {
-                int x = (j * 4) + 1;
+                int y = (j * 4) + 1; //J IS Y
                 Color color = colourArray[x][y];
                 Tile t = null;
                 //square == EMPTY: square is empty
                 if(isSameColor(color, EMPTY))
                 {
                     //create new Tile with max nuts of 0
-                    t = new Tile("icons/Empty.png", 0, 0);
+                    t = new Tile("icons/Empty.png", 0, 0, 0, i, j);
                 }
                 //square == WHITE: square is an empty hole
                 else if(isSameColor(color, WHITE))
                 {
                     //create new Tile with max nuts of 1
-                    t = new Tile("icons/Hole.png", 0, 1);
+                    t = new Tile("icons/Hole.png", 0, 0, 1, i, j);
                 }
                 //square == NUT: square is a nut from a squirrel
                 else if(isSameColor(color, NUT))
@@ -63,7 +63,7 @@ public class FileReader
                 else if(isSameColor(color, FLOWER))
                 {
                     //create a new StationaryTile object
-                    t = new StationaryTile("icons/Flower.png", 0, 0);
+                    t = new StationaryTile("icons/Flower.png", 0, 0, j, i);
                 }
                 //square == anything else: square is a squirrel's body or connected to a nut, continue
                 else continue;
@@ -78,10 +78,10 @@ public class FileReader
     public static Color[][] getColourArray(BufferedImage image)
     {
         Color[][] colourArray = new Color[15][15];
-        for(int y = 0; y < 15; y++)
+        for(int x = 0; x < 15; x++)
         {
             //System.out.println("y: " + Integer.toString(y));
-            for(int x = 0; x < 15; x++)
+            for(int y = 0; y < 15; y++)
             {
                 colourArray[x][y] = new Color(image.getRGB(x, y));
                 //System.out.println(colourArray[x][y]);
@@ -118,7 +118,7 @@ public class FileReader
     {
         int rotation = getRotation(colourArray, x, y);
         //use this to get the rotation of the images
-        Tile t = new MovableTile(piece, "icons/RedSquirrel1Nut.png", rotation);
+        Tile t = new MovableTile(piece, "icons/RedSquirrel1Nut.png", rotation, i, j, true);
         return t;
     }
 
@@ -141,46 +141,47 @@ public class FileReader
 
     public static void completePiece(Piece piece, Tile[][] tileGrid, Color[][] colourArray, int i, int j, int x, int y, int rotation)
     {
-        int originX = x;
-        int originY = y;
+        //i == y, j == x
         int[][] directions = {{0, 1}, {-1, 0}, {0, -1}, {1, 0}};
         int numConnections = 1;
-        while(numConnections > 0)
+        //check all directions for the nut piece
+        for(int[] dir : directions)
         {
-            numConnections = 0;
-            //check all directions for the nut piece
-            for(int[] dir : directions)
+            int newX = x + dir[0] * 2;
+            int newY = y + dir[1] * 2;
+            int newJ = j + dir[1];
+            int newI = i + dir[0];
+
+            //ignore if out of bounds
+            if(!inBounds(newX, newY, 15) || !inBounds(newI, newJ, 4)) continue;
+
+            //if a connecting square is non white, it must be connected to us. 
+            if(!isSameColor(colourArray[newX][newY], WHITE))
             {
-                int newX = x + dir[0] * 2;
-                int newY = y + dir[1] * 2;
-                //if a connecting square is non white, it must be connected to us. 
-                if(!isSameColor(colourArray[x][y], WHITE))
+                //Therefore, as long as it's not already been made: create new tile, add to piece arrayList and add to tileGrid
+                if(tileGrid[newI][newJ] == null)
                 {
-                    //Therefore, as long as it's not already been made: create new tile, add to piece arrayList and add to tileGrid
-                    if(tileGrid[i + dir[0]][j + dir[1]] == null)
+                    String filename;
+                    int r = 0;
+                    if(isSameColor(colourArray[newX][newY], GRASS))
+                        filename = "icons/SquirrelFlower.png";
+                    else
                     {
-                        String filename;
-                        int r = 0;
-                        if(isSameColor(colourArray[newX][newY], GRASS))
-                            filename = "icons/SquirrelFlower.png";
-                        else
-                        {
-                            filename = "icons/RedSquirrel2.png";
-                            r = rotation;
-                        }
-                        MovableTile m = new MovableTile(piece, filename, r);
-                        tileGrid[i + dir[0]][j + dir[1]] = m;
-                        numConnections++;
+                        filename = "icons/RedSquirrel2.png";
+                        r = rotation;
                     }
+                    MovableTile m = new MovableTile(piece, filename, r, newI, newJ, false);
+                    tileGrid[newI][newJ] = m;
                 }
             }
-            //then repeat for all tiles in the piece's arrayList
         }
+
+        //now get pieces connected to the body
     }
 
 
-    public static boolean inBounds(int x, int y)
+    public static boolean inBounds(int x, int y, int upper)
     {
-        return(x >= 0 && x < 4 && y >= 0 && y < 4);
+        return(x >= 0 && x < upper && y >= 0 && y < upper);
     }
 }

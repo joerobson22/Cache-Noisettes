@@ -24,11 +24,12 @@ public class Window extends JFrame implements ActionListener, KeyListener
     final Color WHITE = new Color(255, 255, 255);
 
     final int numDirections = 4;
-    final int[][] moveDirections = {{0, 1}, {0, -1}, {-1, 0}, {1, 0}};
+    final int[][] moveDirections = {{0, -1}, {0, 1}, {-1, 0}, {1, 0}};
     final int[] rotation = {0, 180, 0, 180};
     final String[] filenames = {"ArrowY.png", "ArrowY.png", "ArrowX.png", "ArrowX.png"};
     final Color[] directionColours = {YELLOW, GREEN, BLUE, RED};
     final int[][] holeCoordinates = {{2, 0}, {0, 1}, {1, 2}, {3, 3}};
+    int[] holesFilled = {0, 0, 0, 0};
 
     final int width = 400;
     final int height = 600;
@@ -95,13 +96,13 @@ public class Window extends JFrame implements ActionListener, KeyListener
             for(int j = 0; j < 4; j++)
             {
                 //run through tileGrid that has already been setup by loadFile(), making new JButtons with the pictures of each respective tileGrid
-                JButton b = new JButton(tileGrid[i][j].getPicture());
+                JButton b = new JButton(tileGrid[j][i].getPicture());
 
                 //setup action listeners and add it to the grid button array, as well as the grid panel for displaying
                 b.addActionListener(this);
                 b.setBackground(BROWN);
                 b.setBorder(BorderFactory.createLineBorder(DARKBROWN));
-                gridButtons[i][j] = b;
+                gridButtons[j][i] = b;
                 gridPanel.add(b);
             }
         }
@@ -159,27 +160,19 @@ public class Window extends JFrame implements ActionListener, KeyListener
         selectedPiece = null;
     }
 
-    /**
-     * given a tile, check if it's a hole
-     * @param t the tile to check
-     */
-    public boolean isHole(Tile t)
-    {
-        return t.getMaxNuts() > 0;
-    }
 
     /**
      * checks if a given coordinate on the grid is a hole, by checking every predefined hole coordinate
      * @param coords the coordinates to check
      */
-    public boolean coordisHole(int[] coords)
+    public int coordIsHole(int[] coords)
     {
-        for(int[] c : holeCoordinates)
+        for(int i = 0; i < holeCoordinates.length; i++)
         {
-            if(coords[0] == c[0] && coords[1] == c[1])
-                return true;
+            if(coords[0] == holeCoordinates[i][0] && coords[1] == holeCoordinates[i][1])
+                return i;
         }
-        return false;
+        return -1;
     }
 
     /**
@@ -189,8 +182,74 @@ public class Window extends JFrame implements ActionListener, KeyListener
      */
     public int movePiece(Piece piece, int[] moveDirection)
     {
+        //check if the mvoe is valid
+        if(selectedPiece.checkValidMove(tileGrid, moveDirection[0], moveDirection[1]))
+        {
+            //move the piece in that direction
+            selectedPiece.move(tileGrid, moveDirection[0], moveDirection[1]);
+
+            //find and tidy up any null squares
+            tidyNullTiles();
+
+            //now search through tile grid to identify if there is a nut over a hole
+            nutsInHoles();
+        }
+
+        
         selectedPiece = null;
         return 0;
+    }
+
+
+    public void tidyNullTiles()
+    {
+        for(int i = 0; i < 4; i++)
+        {
+            for(int j = 0; j < 4; j++)
+            {
+                if(tileGrid[i][j] == null)
+                {
+                    int[] coords = {i, j};
+                    int hole = coordIsHole(coords);
+                    if(hole > -1)
+                    {
+                        if(holesFilled[hole] > 0)
+                            tileGrid[i][j] = new Tile("icons/HoleNut.png", 0, 1, 1, i, j);
+                        else
+                            tileGrid[i][j] = new Tile("icons/Hole.png", 0, 0, 1, i, j);
+                    }
+                    else
+                    {
+                        tileGrid[i][j] = new Tile("icons/Empty.png", 0, 0, 0, i, j);
+                    }
+                }
+            }
+        }
+    }
+
+
+    public void nutsInHoles()
+    {
+        for(int i = 0; i < 4; i++)
+        {
+            for(int j = 0; j < 4; j++)
+            {
+                Tile t = tileGrid[i][j];
+                int[] coords = {i, j};
+                int holeInfo = coordIsHole(coords);
+
+                //if empty hole and holding nut
+                if(holeInfo > -1 && t.getHoldingNut())
+                {
+                    if(holesFilled[holeInfo] == 0)
+                    {
+                        t.setHoldingNut(false);
+                        holesFilled[holeInfo] = 1;
+                        tileGrid[i][j].setPicture(new Picture("icons/RedSquirrel1.png", tileGrid[i][j].getRotation()));
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -225,7 +284,7 @@ public class Window extends JFrame implements ActionListener, KeyListener
             if(inputButtons[i] == e.getSource())
             {
                 status = 0;
-                System.out.println("Input button " + Integer.toString(i) + " pressed");
+                //System.out.println("Input button " + Integer.toString(i) + " pressed");
                 if(selectedPiece != null) status = movePiece(selectedPiece, moveDirections[i]);
                 break;
             }
@@ -239,12 +298,12 @@ public class Window extends JFrame implements ActionListener, KeyListener
                 {
                     if(gridButtons[i][j] == e.getSource())
                     {
-                        System.out.println("Grid button (" + Integer.toString(j) + "," + Integer.toString(i) + ") pressed");
+                        //System.out.println("Grid button (" + Integer.toString(i) + "," + Integer.toString(j) + ") pressed");
                         Tile t = tileGrid[i][j];
                         if(t.isMovable())
                         {
                             selectedPiece = tileGrid[i][j].getPiece();
-                            System.out.println("Movable piece");
+                            //System.out.println("Movable piece");
                         }
                         status = 0;
                         break;

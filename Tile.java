@@ -6,18 +6,28 @@ public class Tile
     protected int maxNuts;
     protected int nuts;
 
-    public Tile(String imageFilename, int rotation, int maxNuts)
+    protected int x;
+    protected int y;
+
+    public Tile(String imageFilename, int rotation, int nuts, int maxNuts, int x, int y)
     {
         this.picture = new Picture(imageFilename, rotation);
         canMoveHere = true;
         isMovable = false;
         this.maxNuts = maxNuts;
-        this.nuts = 0;
+        this.nuts = nuts;
+        this.x = x;
+        this.y = y;
     }
 
     public Picture getPicture()
     {
         return picture;
+    }
+
+    public void setPicture(Picture p)
+    {
+        picture = p;
     }
 
     public boolean canMoveHere()
@@ -53,5 +63,35 @@ public class Tile
             return true;
         }
         return false;
+    }
+
+    public int getX()
+    {
+        return x;
+    }
+
+    public int getY()
+    {
+        return y;
+    }
+
+    public void move(int movX, int movY)
+    {
+
+    }
+
+    public boolean getHoldingNut()
+    {
+        return false;
+    }
+
+    public void setHoldingNut(boolean val)
+    {
+
+    }
+
+    public int getRotation()
+    {
+        return 0;
     }
 }
