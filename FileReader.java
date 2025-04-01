@@ -35,6 +35,8 @@ public class FileReader
                 int y = (j * 4) + 1; //J IS Y
                 Color color = colourArray[x][y];
                 Tile t = null;
+                //System.out.printf("(%d,%d)\n", x, y);
+                //System.out.printf("Pixel R: %d, G: %d, B: %d\n", color.getRed(), color.getGreen(), color.getBlue());
                 //square == EMPTY: square is empty
                 if(isSameColor(color, EMPTY))
                 {
@@ -62,8 +64,9 @@ public class FileReader
                 //square == FLOWER: square is a blocked hole
                 else if(isSameColor(color, FLOWER))
                 {
+                    //System.out.println("FLOWER!");
                     //create a new StationaryTile object
-                    t = new StationaryTile("icons/Flower.png", 0, 0, j, i);
+                    t = new StationaryTile("icons/Flower.png", 0, 0, i, j);
                 }
                 //square == anything else: square is a squirrel's body or connected to a nut, continue
                 else continue;
@@ -141,6 +144,10 @@ public class FileReader
 
     public static void completePiece(Piece piece, Tile[][] tileGrid, Color[][] colourArray, int i, int j, int x, int y, int rotation)
     {
+        int bodyX = -1;
+        int bodyY = -1;
+        int bodyI = -1;
+        int bodyJ = -1;
         //i == y, j == x
         int[][] directions = {{0, 1}, {-1, 0}, {0, -1}, {1, 0}};
         int numConnections = 1;
@@ -155,28 +162,53 @@ public class FileReader
             //ignore if out of bounds
             if(!inBounds(newX, newY, 15) || !inBounds(newI, newJ, 4)) continue;
 
+            //System.out.printf("Checking pixel (%d,%d)\n", newX, newY);
+            //System.out.printf("Pixel R: %d, G: %d, B: %d\n", colourArray[newX][newY].getRed(), colourArray[newX][newY].getGreen(), colourArray[newX][newY].getBlue());
+
             //if a connecting square is non white, it must be connected to us. 
-            if(!isSameColor(colourArray[newX][newY], WHITE))
+            if(!isSameColor(colourArray[newX][newY], WHITE) && tileGrid[newI][newJ] == null)
             {
                 //Therefore, as long as it's not already been made: create new tile, add to piece arrayList and add to tileGrid
-                if(tileGrid[newI][newJ] == null)
+                //System.out.printf("(%d,%d) is empty!\n", newI, newJ);
+                String filename;
+                int r = 0;
+                if(isSameColor(colourArray[newX][newY], GRASS))
+                    filename = "icons/SquirrelFlower.png";
+                else
                 {
-                    String filename;
-                    int r = 0;
-                    if(isSameColor(colourArray[newX][newY], GRASS))
-                        filename = "icons/SquirrelFlower.png";
-                    else
-                    {
-                        filename = "icons/RedSquirrel2.png";
-                        r = rotation;
-                    }
-                    MovableTile m = new MovableTile(piece, filename, r, newI, newJ, false);
-                    tileGrid[newI][newJ] = m;
+                    filename = "icons/RedSquirrel2.png";
+                    r = rotation;
+                    bodyX = newX + dir[0] * 2; //move two more pixels over to get the center point of the body tile
+                    bodyY = newY + dir[1] * 2;
+                    bodyI = newI;
+                    bodyJ = newJ;
                 }
+                tileGrid[newI][newJ] = new MovableTile(piece, filename, r, newI, newJ, false);
             }
         }
 
-        //now get pieces connected to the body
+        //now get pieces connected to the body, using the body x, y, i and j variables as start points
+        //check all directions for the nut piece
+        for(int[] dir : directions)
+        {
+            int newX = bodyX + dir[0] * 2;
+            int newY = bodyY + dir[1] * 2;
+            int newJ = bodyJ + dir[1];
+            int newI = bodyI + dir[0];
+
+            //ignore if out of bounds
+            if(!inBounds(newX, newY, 15) || !inBounds(newI, newJ, 4)) continue;
+
+            //System.out.printf("Checking pixel (%d,%d)\n", newX, newY);
+            //System.out.printf("Pixel R: %d, G: %d, B: %d\n", colourArray[newX][newY].getRed(), colourArray[newX][newY].getGreen(), colourArray[newX][newY].getBlue());
+
+            //if a connecting square is non white, it must be connected to us. 
+            if(!isSameColor(colourArray[newX][newY], WHITE) && tileGrid[newI][newJ] == null && newI != i && newJ != j)
+            {
+                //Therefore, as long as it's not already been made: create new tile, add to piece arrayList and add to tileGrid
+                tileGrid[newI][newJ] = new MovableTile(piece, "icons/SquirrelFlower.png", 0, newI, newJ, false);
+            }
+        }
     }
 
 

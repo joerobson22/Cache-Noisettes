@@ -95,6 +95,8 @@ public class Window extends JFrame implements ActionListener, KeyListener
         {
             for(int j = 0; j < 4; j++)
             {
+                //System.out.printf("(%d,%d)\n", j, i);
+                //System.out.println(tileGrid[j][i].getPicture().getFilename());
                 //run through tileGrid that has already been setup by loadFile(), making new JButtons with the pictures of each respective tileGrid
                 JButton b = new JButton(tileGrid[j][i].getPicture());
 
@@ -196,7 +198,7 @@ public class Window extends JFrame implements ActionListener, KeyListener
         }
 
         
-        selectedPiece = null;
+        //selectedPiece = null;
         return 0;
     }
 
