@@ -32,10 +32,6 @@ public class Window extends JFrame implements ActionListener, KeyListener
     final String[] filenames = {"ArrowY.png", "ArrowY.png", "ArrowX.png", "ArrowX.png"};
     final Color[] directionColours = {YELLOW, GREEN, BLUE, RED};
 
-    //hole coordinate and filled information
-    final int[][] holeCoordinates = {{2, 0}, {0, 1}, {1, 2}, {3, 3}};
-    boolean[] holesFilled = {false, false, false, false};
-
     //predetermined width and height of window
     final int width = 400;
     final int height = 600;
@@ -49,15 +45,16 @@ public class Window extends JFrame implements ActionListener, KeyListener
     //arrays of buttons
     JButton[] inputButtons;
     JButton[][] gridButtons;
-
-    //the piece that is currently selected
-    Piece selectedPiece;
-
-    //2d array of tiles, stores information on the state of the 2d puzzle grid
-    Tile[][] tileGrid;
+    JButton mainMenuButton;
+    JButton nextlevelButton;
 
     //what level we're on
     int levelNum;
+    JButton blankButton2;
+
+    boolean playing = true;
+
+    Grid grid;
 
     /**
      * constructor, initialises everything to do with the window
@@ -69,7 +66,7 @@ public class Window extends JFrame implements ActionListener, KeyListener
         String filename = null;
         this.levelNum = levelNum;
         if(levelNum == 0)
-            filename = "blankwithholes.bmp";
+            filename = "color-pallete.bmp";
         else
             filename = "level" + Integer.toString(levelNum) + ".bmp";
         
@@ -77,9 +74,10 @@ public class Window extends JFrame implements ActionListener, KeyListener
         //requires try catch block
         try 
         {
-            tileGrid = FileReader.loadFile(filename);
+            System.out.printf("Loading %s...\n", filename);
+            grid = new Grid(FileReader.loadFile(filename));
         }
-        catch(IOException e) 
+        catch(IOException e)
         {
             //in case of error, print the stack trace and end the execution
             e.printStackTrace();
@@ -92,9 +90,6 @@ public class Window extends JFrame implements ActionListener, KeyListener
 
         //setup the window
         setupWindow();
-
-        //setup other game variables
-        selectedPiece = null;
     }
 
     /**
@@ -158,7 +153,7 @@ public class Window extends JFrame implements ActionListener, KeyListener
                 //System.out.printf("(%d,%d)\n", j, i);
                 //System.out.println(tileGrid[j][i].getPicture().getFilename());
                 //run through tileGrid that has already been setup by loadFile(), making new JButtons with the pictures of each respective tileGrid
-                JButton b = new JButton(tileGrid[j][i].getPicture());
+                JButton b = new JButton(grid.getTile(j, i).getPicture());
 
                 //setup action listeners and add it to the grid button array, as well as the grid panel for displaying
                 b.addActionListener(this);
@@ -175,18 +170,35 @@ public class Window extends JFrame implements ActionListener, KeyListener
      */
     public void initInfoPanel()
     {
-        //create the info panel: contains current level, main menu button and your information
-        infoPanel = new JPanel(new BorderLayout());
+        //create the info panel: contains main menu button, current level num and next level button
+        infoPanel = new JPanel(new GridLayout(1, 4));
 
+        //create main menu button
         Picture mainMenuPicture = new Picture("icons/MainMenu.png", 0);
-        JButton mainMenuButton = new JButton(mainMenuPicture);
+        mainMenuButton = new JButton(mainMenuPicture);
         mainMenuButton.addActionListener(this);
         mainMenuButton.setBackground(DARKBROWN);
-        mainMenuButton.setBorder(BorderFactory.createLineBorder(DARKBROWN));
-        infoPanel.add("West", mainMenuButton);
+        mainMenuButton.setBorder(BorderFactory.createLineBorder(WHITE));
+        infoPanel.add(mainMenuButton);
 
-        infoPanel.add("Center", new Label("Level " + Integer.toString(levelNum), SwingConstants.CENTER));
-        infoPanel.add("East", new Label("Username", SwingConstants.CENTER));
+        //add two blank buttons with no action listeners that display the level number
+        JButton blankButton1 = new JButton("Level");
+        blankButton2 = new JButton(Integer.toString(levelNum));
+        blankButton1.setForeground(WHITE);
+        blankButton2.setForeground(WHITE);
+        blankButton1.setBackground(BLACK);
+        blankButton2.setBackground(BLACK);
+        blankButton1.setBorder(BorderFactory.createLineBorder(BLACK));
+        blankButton2.setBorder(BorderFactory.createLineBorder(BLACK));
+        infoPanel.add(blankButton1);
+        infoPanel.add(blankButton2);
+        
+        //create a new button that will take the user to the next level when clicked
+        nextlevelButton = new JButton(new Picture("icons/ArrowX.png", 180));
+        nextlevelButton.setBackground(DARKBROWN);
+        nextlevelButton.setBorder(BorderFactory.createLineBorder(WHITE));
+        nextlevelButton.addActionListener(this);
+        infoPanel.add(nextlevelButton);
     }
 
     /**
@@ -214,109 +226,6 @@ public class Window extends JFrame implements ActionListener, KeyListener
     }
 
     /**
-     * checks if a given coordinate on the grid is a hole, by checking every predefined hole coordinate
-     * @param coords the coordinates to check
-     * @return returns an integer that corresponds to the hole in the 'holesFilled' array
-     */
-    public int coordIsHole(int[] coords)
-    {
-        for(int i = 0; i < holeCoordinates.length; i++)
-        {
-            if(coords[0] == holeCoordinates[i][0] && coords[1] == holeCoordinates[i][1])
-                return i;
-        }
-        return -1;
-    }
-
-    /**
-     * given a set of coordinates, identify if every tile in that piece can validly move in that direction
-     * @param piece the piece to move
-     * @param moveDirection the movement vector
-     */
-    public void movePiece(Piece piece, int[] moveDirection)
-    {
-        //check if the move is valid
-        if(selectedPiece.checkValidMove(tileGrid, moveDirection[0], moveDirection[1]))
-        {
-            //move the piece in that direction
-            selectedPiece.move(tileGrid, moveDirection[0], moveDirection[1]);
-
-            //find and tidy up any null squares
-            tidyNullTiles();
-
-            //now search through tile grid to identify if there is a nut over a hole
-            nutsInHoles();
-        }
-    }
-
-    /**
-     * after a piece has been moves, it will leave behind a few 'null' tiles in the tileGrid
-     * these need to be turned back into empty squares or holes- either filled or not filled
-     */
-    public void tidyNullTiles()
-    {
-        //loop through entire array
-        for(int i = 0; i < 4; i++)
-        {
-            for(int j = 0; j < 4; j++)
-            {
-                //once a tile is null, it needs to be replaced by an empty tile or a hole
-                if(tileGrid[i][j] == null)
-                {
-                    int[] coords = {i, j};
-                    int hole = coordIsHole(coords);
-                    //the hole information returned is not -1, meaning it is a hole
-                    if(hole > -1)
-                    {
-                        //if this hole is filled, show it, using the 'holenut' picture
-                        if(holesFilled[hole])
-                            tileGrid[i][j] = new Tile("icons/HoleNut.png", 0, 1, 1, i, j);
-                        //otherwise just use the hole image
-                        else
-                            tileGrid[i][j] = new Tile("icons/Hole.png", 0, 0, 1, i, j);
-                    }
-                    //the tile is just empty
-                    else
-                    {
-                        tileGrid[i][j] = new Tile("icons/Empty.png", 0, 0, 0, i, j);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * once all null squares have been removed, check if there are any nuts hovering over any empty holes
-     * if so, drop that nut into that hole and update the game
-     */
-    public void nutsInHoles()
-    {
-        //loop through all tiles
-        for(int i = 0; i < 4; i++)
-        {
-            for(int j = 0; j < 4; j++)
-            {
-                Tile t = tileGrid[i][j];
-                int[] coords = {i, j};
-                //once a hole has been found (coordIsHole returns a number greater then -1)
-                int holeInfo = coordIsHole(coords);
-
-                //if the tile contains a squirrel holding a nut...
-                if(holeInfo > -1 && t.getHoldingNut())
-                {
-                    if(!holesFilled[holeInfo])
-                    {
-                        //falseify the fact that the squirrel is holding a nut, drop that nut into the given hole, and change any pictures
-                        t.setHoldingNut(false);
-                        holesFilled[holeInfo] = true;
-                        t.setPicture(new Picture("icons/" + t.getColor() + "Squirrel1.png", t.getRotation()));
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * function used to update all grid button pictures
      * uses the 'setIcon()' function, passing in each respective tile's Picture, since Picture extends ImageIcon
      */
@@ -328,10 +237,10 @@ public class Window extends JFrame implements ActionListener, KeyListener
             for(int j = 0; j < 4; j++)
             {
                 //for each button, update its icons to be the respective tile's current icon
-                Tile t = tileGrid[i][j];
+                Tile t = grid.getTile(i, j);
                 gridButtons[i][j].setIcon(t.getPicture());
                 //if the tile is part of a piece that is currently selected, highlight it!
-                if(t.getPiece() != null && t.getPiece() == selectedPiece) 
+                if(t.getPiece() != null && t.getPiece() == grid.getSelectedPiece()) 
                     gridButtons[i][j].setBorder(BorderFactory.createLineBorder(RED));
                 else 
                     gridButtons[i][j].setBorder(BorderFactory.createLineBorder(DARKBROWN));
@@ -348,25 +257,24 @@ public class Window extends JFrame implements ActionListener, KeyListener
         //System.out.println(e.getSource());
         boolean found = false;
 
-        //check if the button press came from the input buttons
-        for(int i = 0; i < inputButtons.length; i++) 
+        if(playing)
         {
-            //check if the input button matches the source of the actionEvent
-            if(inputButtons[i] == e.getSource())
+            //check if the button press came from the input buttons
+            for(int i = 0; i < inputButtons.length; i++) 
             {
-                found = true;
-                //System.out.println("Input button " + Integer.toString(i) + " pressed");
-                if(selectedPiece != null)
+                //check if the input button matches the source of the actionEvent
+                if(inputButtons[i] == e.getSource())
                 {
                     found = true;
-                    movePiece(selectedPiece, moveDirections[i]);
+                    grid.moveSelectedPiece(moveDirections[i]);
+                    break;
                 }
-                break;
             }
         }
+        
 
         //not from input buttons, check if the button press came from the grid buttons
-        if(!found) 
+        if(!found && playing) 
         {
             //loop through all grid buttons
             for(int i = 0; i < 4; i++) 
@@ -376,14 +284,7 @@ public class Window extends JFrame implements ActionListener, KeyListener
                     //check if the grid button matches the source of the actionEvent
                     if(gridButtons[i][j] == e.getSource())
                     {
-                        //System.out.println("Grid button (" + Integer.toString(i) + "," + Integer.toString(j) + ") pressed");
-                        Tile t = tileGrid[i][j];
-                        //if the tile is movable, set the selected piece to be the movable tile's piece
-                        if(t.isMovable())
-                        {
-                            selectedPiece = tileGrid[i][j].getPiece();
-                            //System.out.println("Movable piece");
-                        }
+                        grid.tileClicked(i, j);
                         found = true;
                         break;
                     }
@@ -391,12 +292,33 @@ public class Window extends JFrame implements ActionListener, KeyListener
             }
         }
         
-        //not grid or input buttons, must be the main menu button
-        if(!found)
-            System.out.println("Main Menu pressed");
+        if(e.getSource() == mainMenuButton)
+        {
+            //main menu
+            this.setVisible(false);
+        }
+
+        if(e.getSource() == nextlevelButton)
+        {
+            this.setVisible(false);
+            //next level
+            int nextLevel = levelNum + 1;
+            if(nextLevel > 10)
+                nextLevel = 1;
+            Window mainWindow = new Window(nextLevel);
+        }
         
         //update all visuals
         updateGridVisuals();
+
+        //check if the game is won
+        playing = !grid.hasWon();
+        if(!playing)
+        {
+            //display complete status
+            blankButton2.setText("Complete!");
+            blankButton2.setForeground(GREEN);
+        }
     }
 
     /**
