@@ -51,6 +51,7 @@ public class Window extends JFrame implements ActionListener, KeyListener
     //what level we're on
     int levelNum;
     JButton blankButton2;
+    int numLevels;
 
     boolean playing = true;
 
@@ -60,11 +61,12 @@ public class Window extends JFrame implements ActionListener, KeyListener
      * constructor, initialises everything to do with the window
      * @param levelNum the level number
      */
-    public Window(int levelNum)
+    public Window(int levelNum, int numLevels)
     {
         //set the filename to load up
         String filename = null;
         this.levelNum = levelNum;
+        this.numLevels = numLevels;
         if(levelNum == 0)
             filename = "color-pallete.bmp";
         else
@@ -113,7 +115,7 @@ public class Window extends JFrame implements ActionListener, KeyListener
         //set size, visibility, title and close operation
         this.setSize(width, height);
         this.setVisible(true);
-        this.setTitle("Cache Noisettes");
+        this.setTitle("Cache Noisettes- Level " + Integer.toString(levelNum));
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setResizable(false);
         //focus key inputs on this window and add this as a key listener
@@ -252,7 +254,7 @@ public class Window extends JFrame implements ActionListener, KeyListener
      * Listens for button presses
      * @param e the action event
      */
-    public void actionPerformed(ActionEvent e)
+    @Override public void actionPerformed(ActionEvent e)
     {
         //System.out.println(e.getSource());
         boolean found = false;
@@ -296,6 +298,7 @@ public class Window extends JFrame implements ActionListener, KeyListener
         {
             //main menu
             this.setVisible(false);
+            MainMenu main = new MainMenu();
         }
 
         if(e.getSource() == nextlevelButton)
@@ -303,9 +306,9 @@ public class Window extends JFrame implements ActionListener, KeyListener
             this.setVisible(false);
             //next level
             int nextLevel = levelNum + 1;
-            if(nextLevel > 10)
+            if(nextLevel > numLevels)
                 nextLevel = 1;
-            Window mainWindow = new Window(nextLevel);
+            Window mainWindow = new Window(nextLevel, numLevels);
         }
         
         //update all visuals
