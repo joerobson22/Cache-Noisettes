@@ -1,13 +1,9 @@
-import javax.swing.*;
-
-import java.awt.*;
-import java.awt.Color;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.Label;
-import java.awt.TextArea;
 import java.awt.event.*;
-import java.io.*;
+import javax.swing.*;
 
 public class MainMenu extends JFrame implements ActionListener
 {
@@ -33,7 +29,7 @@ public class MainMenu extends JFrame implements ActionListener
     int width = 400;
     int height = 400;
 
-    int numLevels = 10;
+    int numLevels = 20;
 
     /**
      * constructor for main menu
@@ -96,7 +92,7 @@ public class MainMenu extends JFrame implements ActionListener
      */
     public void initLevelsPanel()
     {
-        levelsPanel = new JPanel(new GridLayout(4, 3));
+        levelsPanel = new JPanel(new GridLayout(5, 4));
         levelButtons = new JButton[numLevels];
         for(int i = 0; i < numLevels; i++)
         {
