@@ -92,10 +92,10 @@ public class FileReader
     }
 
     /**
-     * returns a 15x15 grid of Color objects from a .bmp image
+     * given an image, returns a 15x15 grid of Color objects from a .bmp image
      * @return returns a 2D color array
      */
-    public static Color[][] getColorArray(BufferedImage image)
+    private static Color[][] getColorArray(BufferedImage image)
     {
         //init return array
         Color[][] colorArray = new Color[15][15];
@@ -123,7 +123,7 @@ public class FileReader
     }
 
     /**
-     * used for debugging, quickly outputs the RGB values fo a given color
+     * used for debugging, quickly outputs the RGB values of a given color
      * @param color the color to output
      */
     public static void outputColor(Color color)
@@ -132,11 +132,11 @@ public class FileReader
     }
 
     /**
-     * gets the corresponding color of a squirrel as a string (for use in filenames later)
+     * gets the corresponding color of a squirrel as a string (for use in filenames later)- defaults to black if none of the other match
      * @param color the color to compare to other color constants
      * @return returns a string: "Red", "Grey", "Brown" or "Black"
      */
-    public static String getColorString(Color color)
+    private static String getColorString(Color color)
     {
         if(isSameColor(REDSQUIRREL, color))
             return "Red";
@@ -158,12 +158,16 @@ public class FileReader
      * @param y the pixel y value of the nut
      * @return returns a nut tile with the correct rotation and squirrel color
      */
-    public static Tile getNutTile(int i, int j, Piece piece, Color[][] colorArray, int x, int y)
+    private static Tile getNutTile(int i, int j, Piece piece, Color[][] colorArray, int x, int y)
     {
+        //get the rotation and color simultaneously as an array of 2 strings
+        //[0] = rotation
+        //[1] = colorString
         String[] rotationAndColor = getRotationAndColor(colorArray, x, y);
         int rotation = Integer.parseInt(rotationAndColor[0]);
         String colorString = rotationAndColor[1];
 
+        //create new movable nut tile piece with the correct rotation and colour, as determined earlier
         Tile t = new MovableTile(piece, "icons/" + colorString + "Squirrel1Nut.png", rotation, i, j, true, colorString);
         return t;
     }
@@ -175,7 +179,7 @@ public class FileReader
      * @param y the pixel y value of the nut
      * @return String array: [0] = the rotation, [1] = the color string
      */
-    public static String[] getRotationAndColor(Color[][] colorArray, int x, int y)
+    private static String[] getRotationAndColor(Color[][] colorArray, int x, int y)
     {
         //to get rotation, look at tiles left, right, up and down the nut. if one of them IS NOT GREEN, that's where the squirrel's hands are
         int[][] directions = {{0, 1}, {-1, 0}, {0, -1}, {1, 0}};
@@ -209,7 +213,7 @@ public class FileReader
      * @param rotation the rotation of the squirrel
      * @param colorString the color of the squirrel
      */
-    public static void completePiece(Piece piece, Tile[][] tileGrid, Color[][] colorArray, int i, int j, int x, int y, int rotation, String colorString)
+    private static void completePiece(Piece piece, Tile[][] tileGrid, Color[][] colorArray, int i, int j, int x, int y, int rotation, String colorString)
     {
         //init all body coordinates
         int bodyX = -1;
@@ -295,7 +299,7 @@ public class FileReader
      * @param upper upper bound
      * @return true or false
      */
-    public static boolean inBounds(int x, int y, int upper)
+    private static boolean inBounds(int x, int y, int upper)
     {
         return(x >= 0 && x < upper && y >= 0 && y < upper);
     }

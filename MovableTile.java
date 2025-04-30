@@ -1,6 +1,5 @@
 /**
  * the movable tile class, of which extends the tile class
- * @author Joe Robson
  */
 public class MovableTile extends Tile
 {
@@ -53,12 +52,11 @@ public class MovableTile extends Tile
     }
 
     /**
-     * sets if this tile is holding a nut or not- overrides from base
-     * @param val true or false
+     * drops the nut- instead of a 'setHoldingNut' method to prevent accidental modification of a tile that can't be holding a nut
      */
-    public void setHoldingNut(boolean val)
+    public void dropNut()
     {
-        holdingNut = val;
+        holdingNut = false;
     }
 
     /**

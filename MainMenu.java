@@ -3,8 +3,14 @@ import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.Label;
 import java.awt.event.*;
+import java.io.File;
+
 import javax.swing.*;
 
+/*
+ * the main menu, a window to select which of the x levels to play
+ * dynamically calculates how many levels exist in the levels folder
+ */
 public class MainMenu extends JFrame implements ActionListener
 {
     //Color constants
@@ -29,20 +35,33 @@ public class MainMenu extends JFrame implements ActionListener
     int width = 400;
     int height = 400;
 
-    int numLevels = 20;
+    int numLevels;
 
     /**
-     * constructor for main menu
+     * constructor for main menu, takes no parameters
      */
     public MainMenu()
     {
+        //starting from 1, while that .bmp file exists, continue to look through
+        boolean cont = true;
+        numLevels = 1;
+        while(cont)
+        {
+            File f = new File("levels/level" + Integer.toString(numLevels++) + ".bmp");
+            cont = f.exists();
+        }
+        //to save checking every time if the file doesn't exist, we take 2 off the total since numLevels increments prior to setting the value of cont every loop
+        //meaning it will overshoot by 2 every time
+        numLevels -= 2;
+
+        //now set up the main menu window
         setupWindow();
     }
 
     /**
      * sets up all the panels and initialises the main menu as a visible window
      */
-    public void setupWindow()
+    private void setupWindow()
     {
         initTitlePanel();
 
@@ -62,8 +81,9 @@ public class MainMenu extends JFrame implements ActionListener
 
     /**
      * initialises the main panel in a border layout, containing the title and level panels
+     * border layout allows you to put the title all the way at the top and leave the buttons to fill the rest of the screen
      */
-    public void initMainPanel()
+    private void initMainPanel()
     {
         mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(DARKBROWN);
@@ -75,14 +95,16 @@ public class MainMenu extends JFrame implements ActionListener
     /**
      * initialises the title panel, with a central 'main menu' title label
      */
-    public void initTitlePanel()
+    private void initTitlePanel()
     {
         titlePanel = new JPanel(new GridLayout(1, 5));
+        //add 2 empty labels to push the 'Main Menu' label central
         titlePanel.add(new Label());
         titlePanel.add(new Label());
 
         titlePanel.add(new Label("Main Menu"));
 
+        //add 2 more empty labels to pad out the rest of the grid
         titlePanel.add(new Label());
         titlePanel.add(new Label());
     }
@@ -90,19 +112,24 @@ public class MainMenu extends JFrame implements ActionListener
     /**
      * initialises the level panel, creating all possible buttons with action listeners in a 3 by X grid layout
      */
-    public void initLevelsPanel()
+    private void initLevelsPanel()
     {
-        levelsPanel = new JPanel(new GridLayout(5, 4));
+        levelsPanel = new JPanel(new GridLayout(numLevels / 4, 4));
         levelButtons = new JButton[numLevels];
         for(int i = 0; i < numLevels; i++)
         {
+            //create a new button displaying its respective level number
             JButton b = new JButton(Integer.toString(i + 1));
-            //JButton b = new JButton(new Picture("levels/level" + Integer.toString(i + 1) + ".bmp", 0));
 
+            //add action listener as this window
             b.addActionListener(this);
+
+            //set its background and text colour, and give it a border using BorderFactory
             b.setBackground(BROWN);
             b.setForeground(BLACK);
             b.setBorder(BorderFactory.createLineBorder(WHITE));
+
+            //add it to the levelButtons array to track later, and then add it to the panel
             levelButtons[i] = b;
             levelsPanel.add(b);
         }
@@ -114,11 +141,14 @@ public class MainMenu extends JFrame implements ActionListener
      */
     @Override public void actionPerformed(ActionEvent e)
     {
+        //loop through all buttons in the levelButtons array
         for(int i = 0; i < levelButtons.length; i++)
         {
+            //if that button is the source of the click...
             if(levelButtons[i] == e.getSource())
             {
-                Window gameWindow = new Window(i + 1, numLevels);
+                //create a new game window, loading that respective level's .bmp file, and hide this current window
+                Window gameWindow = new Window(Integer.valueOf(levelButtons[i].getText()), numLevels);
                 this.setVisible(false);
             }
         }

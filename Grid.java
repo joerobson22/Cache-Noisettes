@@ -1,3 +1,6 @@
+/**
+ * manages the grid and all methods related to it
+ */
 public class Grid
 {
     //the piece that is currently selected
@@ -23,10 +26,11 @@ public class Grid
     /**
      * checks if a given coordinate on the grid is a hole, by checking every predefined hole coordinate
      * @param coords the coordinates to check
-     * @return returns an integer that corresponds to the hole in the 'holesFilled' array
+     * @return returns an integer that corresponds to the hole in the 'holesFilled' array. -1 if the coords are not a hole.
      */
-    public int coordIsHole(int[] coords)
+    private int coordIsHole(int[] coords)
     {
+        //loops through every set of hole coordinates defined earlier, and compares the x and y of the coords passed
         for(int i = 0; i < holeCoordinates.length; i++)
         {
             if(coords[0] == holeCoordinates[i][0] && coords[1] == holeCoordinates[i][1])
@@ -39,7 +43,7 @@ public class Grid
      * after a piece has been moves, it will leave behind a few 'null' tiles in the tileGrid
      * these need to be turned back into empty squares or holes- either filled or not filled
      */
-    public void tidyNullTiles()
+    private void tidyNullTiles()
     {
         //loop through entire array
         for(int i = 0; i < 4; i++)
@@ -75,30 +79,26 @@ public class Grid
      * once all null squares have been removed, check if there are any nuts hovering over any empty holes
      * if so, drop that nut into that hole and update the game
      */
-    public void nutsInHoles()
+    private void nutsInHoles()
     {
-        //loop through all tiles
-        for(int i = 0; i < 4; i++)
+        //loop through all hole coordinates
+        for(int i = 0; i < holeCoordinates.length; i++)
         {
-            for(int j = 0; j < 4; j++)
-            {
-                Tile t = tileGrid[i][j];
-                int[] coords = {i, j};
-                //once a hole has been found (coordIsHole returns a number greater then -1)
-                int holeInfo = coordIsHole(coords);
+            //if this hole is already filled, skip over it
+            if(holesFilled[i]) continue;
 
-                //if the tile contains a squirrel holding a nut...
-                if(holeInfo > -1 && t.getHoldingNut())
-                {
-                    if(!holesFilled[holeInfo])
-                    {
-                        //falseify the fact that the squirrel is holding a nut, drop that nut into the given hole, and change any pictures
-                        t.setHoldingNut(false);
-                        holesFilled[holeInfo] = true;
-                        t.setPicture(new Picture("icons/" + t.getColor() + "Squirrel1.png", t.getRotation()));
-                    }
-                }
-            }
+            //get hole coords and corresponding tile
+            int holeX = holeCoordinates[i][0];
+            int holeY = holeCoordinates[i][1];
+            Tile t = tileGrid[holeX][holeY];
+            
+            //if this tile isn't holding a nut, skip over it
+            if(!t.getHoldingNut()) continue;
+
+            //otherwise, there is an empty hole with a nut being held over it, so drop the nut into the hole, and update the visuals
+            t.dropNut();
+            holesFilled[i] = true;
+            t.setPicture(new Picture("icons/" + t.getColor() + "Squirrel1.png", t.getRotation()));
         }
     }
 

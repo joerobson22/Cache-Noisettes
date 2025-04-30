@@ -11,9 +11,8 @@ import java.io.*;
 
 /**
  * This class is the base window, containing the level information, the grid and the inputs
- * @author Joe Robson
  */
-public class Window extends JFrame implements ActionListener, KeyListener
+public class Window extends JFrame implements ActionListener
 {
     //Color constants
     final Color BROWN = new Color(132, 60, 12);
@@ -118,10 +117,6 @@ public class Window extends JFrame implements ActionListener, KeyListener
         this.setTitle("Cache Noisettes- Level " + Integer.toString(levelNum));
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.setResizable(false);
-        //focus key inputs on this window and add this as a key listener
-        this.setFocusable(true);
-        this.requestFocusInWindow();
-        this.addKeyListener(this);
     }
 
     /**
@@ -152,8 +147,6 @@ public class Window extends JFrame implements ActionListener, KeyListener
         {
             for(int j = 0; j < 4; j++)
             {
-                //System.out.printf("(%d,%d)\n", j, i);
-                //System.out.println(tileGrid[j][i].getPicture().getFilename());
                 //run through tileGrid that has already been setup by loadFile(), making new JButtons with the pictures of each respective tileGrid
                 JButton b = new JButton(grid.getTile(j, i).getPicture());
 
@@ -323,16 +316,4 @@ public class Window extends JFrame implements ActionListener, KeyListener
             blankButton2.setForeground(GREEN);
         }
     }
-
-    /**
-     * Only important key listener, listens for arrow keys
-     * @param e the key event
-     */
-    public void keyReleased(KeyEvent e)
-    {
-        System.out.println("Key pressed");
-    }
-
-    public void keyTyped(KeyEvent e){}
-    public void keyPressed(KeyEvent e){}
 }

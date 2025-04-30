@@ -128,9 +128,8 @@ public class Tile
 
     /**
      * sets if the tile is holding a nut or not
-     * @param val true or false value
      */
-    public void setHoldingNut(boolean val)
+    public void dropNut()
     {
 
     }
